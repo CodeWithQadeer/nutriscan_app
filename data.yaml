@@ -1,0 +1,7 @@
+train: /Users/SPIDEY/Desktop/yolov5_dataset/train
+val: /Users/SPIDEY/Desktop/yolov5_dataset/valid
+test: /Users/SPIDEY/Desktop/yolov5_dataset/test
+
+
+nc: 32  # Number of classes (your dataset contains 32 classes)
+names: ['Bitter melon', 'Brinjal', 'Cabbage', 'Calabash', 'Capsicum', 'Cauliflower', 'Cherry', 'Garlic', 'Ginger', 'Green Chili', 'Kiwi', 'Lady finger', 'Onion', 'Potato', 'Sponge Gourd', 'Tomato', 'apple', 'avocado', 'banana', 'cucumber', 'dragon fruit', 'egg', 'guava', 'mango', 'orange', 'oren', 'peach', 'pear', 'pineapple', 'strawberry', 'Custard apple', 'watermelon']

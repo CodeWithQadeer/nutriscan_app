@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>Live Detection - NutriScan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-gray-100 text-gray-800">
+    <div class="max-w-6xl mx-auto p-6 mt-10 bg-white rounded-xl shadow-lg">
+        <h2 class="text-3xl font-bold mb-6 text-center">🎥 Live Webcam Detection</h2>
+
+        <div class="grid md:grid-cols-2 gap-8">
+            <!-- Webcam Video Feed -->
+            <div class="flex flex-col items-center">
+                <video id="webcam" autoplay class="rounded-lg border w-full max-w-md"></video>
+                <div id="loading-indicator" class="text-blue-600 text-lg mt-4 hidden">Detecting...</div>
+                <button id="stopButton"
+                    class="mt-6 bg-red-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-red-600">
+                    Stop Detection
+                </button>
+            </div>
+
+            <!-- Detection Results -->
+            <div class="bg-gray-50 p-6 rounded-lg border shadow-inner h-full">
+                <h3 class="text-2xl font-semibold mb-4">🧾 Detected Items</h3>
+                <div id="resultsBox" class="space-y-4 text-left text-lg text-gray-700">
+                    <p class="text-gray-500">Waiting for detection...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const webcamVideo = document.getElementById("webcam");
+        const loadingIndicator = document.getElementById("loading-indicator");
+        const stopButton = document.getElementById("stopButton");
+        const resultsBox = document.getElementById("resultsBox");
+
+        let isDetecting = true;
+        let detectInterval;
+        let videoStream;
+
+        async function startWebcam() {
+            try {
+                videoStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                webcamVideo.srcObject = videoStream;
+                detectObjects();
+            } catch (err) {
+                alert("Error accessing webcam: " + err.message);
+            }
+        }
+
+        function stopWebcam() {
+            isDetecting = false;
+            if (detectInterval) clearInterval(detectInterval);
+            if (videoStream) {
+                videoStream.getTracks().forEach((track) => track.stop());
+            }
+            loadingIndicator.classList.add("hidden");
+            resultsBox.innerHTML += `<p class="text-red-500 mt-4">Detection stopped.</p>`;
+        }
+
+        async function detectObjects() {
+            const canvas = document.createElement("canvas");
+            const context = canvas.getContext("2d");
+
+            detectInterval = setInterval(async () => {
+                if (!isDetecting) return;
+
+                canvas.width = webcamVideo.videoWidth;
+                canvas.height = webcamVideo.videoHeight;
+                context.drawImage(webcamVideo, 0, 0, canvas.width, canvas.height);
+                const imageData = canvas.toDataURL("image/jpeg");
+
+                try {
+                    loadingIndicator.classList.remove("hidden");
+
+                    const response = await fetch("/detect", {
+                        method: "POST",
+                        headers: { "Content-Type": "application/json" },
+                        body: JSON.stringify({ image: imageData }),
+                    });
+
+                    const data = await response.json();
+                    loadingIndicator.classList.add("hidden");
+
+                    if (data && data.detected_items && data.detected_items.length > 0) {
+                        resultsBox.innerHTML = ""; // Clear previous
+                        data.detected_items.forEach((item, index) => {
+                            resultsBox.innerHTML += `
+                                <div class="p-4 bg-white rounded shadow border">
+                                    <p class="font-semibold">🍎 ${item.name}</p>
+                                    <p>Calories: ${item.calories} kcal</p>
+                                </div>
+                            `;
+                        });
+                    } else {
+                        resultsBox.innerHTML = `<p class="text-gray-500">No item detected.</p>`;
+                    }
+                } catch (err) {
+                    console.error("Error detecting objects:", err);
+                    loadingIndicator.classList.add("hidden");
+                }
+            }, 1500); // every 1.5s
+        }
+
+        stopButton.addEventListener("click", () => {
+            stopWebcam();
+            setTimeout(() => {
+                window.location.href = "/";
+            }, 1000);
+        });
+
+        startWebcam();
+    </script>
+</body>
+
+</html>

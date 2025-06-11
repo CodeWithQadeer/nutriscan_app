@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <title>NutriScan</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet" />
+    <style>
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+    </style>
+</head>
+
+<body class="bg-[url(https://i.pinimg.com/736x/73/94/8f/73948fffb885da66f9dab52abb370cc8.jpg)] bg-cover bg-center bg-no-repeat text-gray-800">
+    <!-- Header -->
+    <header class="flex justify-between items-center px-6 py-4 bg-white rounded-b-xl shadow-sm sticky top-0 z-50">
+        <h1 class="text-xl font-bold">🥝 NutriScan</h1>
+        <nav class="flex gap-6 text-gray-600 font-medium">
+            <a href="#how-it-works" class="hover:underline">How it works</a>
+            <a href="#contact" class="hover:underline">Contact</a>
+            <a href="/live"
+                class="bg-blue-500 text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600">Live Detect</a>
+        </nav>
+    </header>
+
+    <!-- Hero Section -->
+    <section class="flex justify-center mt-10">
+        <div class="bg-[url(https://i.pinimg.com/736x/c4/c8/9e/c4c89e02b0a91463c118e4b3d6560b44.jpg)] bg-cover bg-center bg-no-repeat rounded-xl p-8 shadow-lg w-full max-w-4xl text-center">
+            <img src="https://images.pexels.com/photos/1132047/pexels-photo-1132047.jpeg"
+                alt="Food" class="rounded-lg w-full h-64 object-cover mb-6" />
+            <h2 class="text-3xl font-extrabold mb-4">Unlock the Nutritional Secrets of Your Food</h2>
+            <p class="text-gray-600 mb-6 max-w-2xl mx-auto">
+                NutriScan is your personal AI-powered nutrition assistant. Just upload a photo — and instantly get fruit
+                or vegetable name and calorie estimation.
+            </p>
+
+            <!-- Upload Button -->
+            <div class="mb-4">
+                <input type="file" id="imageUpload" accept="image/*"
+                    class="block mb-3 w-full text-center file:py-2 file:px-4 file:rounded file:border-0 file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200" />
+                <button id="uploadButton"
+                    class="bg-blue-500 hover:bg-blue-600 text-white px-6 py-2 rounded-lg font-semibold">
+                    Upload Image
+                </button>
+            </div>
+
+            <div id="loading-indicator" class="text-blue-600 text-lg mt-4 hidden">Detecting...</div>
+        </div>
+    </section>
+
+    <!-- How it Works -->
+    <section id="how-it-works" class="mt-20 px-6 max-w-5xl mx-auto text-center">
+        <h3 class="text-2xl font-bold mb-4">🔍 How it Works</h3>
+        <div class="grid md:grid-cols-3 gap-6 text-left text-gray-700">
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h4 class="font-semibold text-lg mb-2">1. Upload Image</h4>
+                <p>Select an image from your device to analyze the food item.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h4 class="font-semibold text-lg mb-2">2. AI Detection</h4>
+                <p>NutriScan uses AI to detect fruits and vegetables in the image.</p>
+            </div>
+            <div class="bg-white p-6 rounded-lg shadow-sm">
+                <h4 class="font-semibold text-lg mb-2">3. Calorie Estimation</h4>
+                <p>Get estimated calories based on nutritional data.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact -->
+    <section id="contact" class="mt-20 px-6 max-w-2xl mx-auto text-center">
+        <h3 class="text-2xl font-bold mb-4">📩 Contact Us</h3>
+        <p class="text-gray-700 mb-4">Have any questions or feedback? We'd love to hear from you!</p>
+        <div class="bg-[url(https://i.pinimg.com/736x/c4/c8/9e/c4c89e02b0a91463c118e4b3d6560b44.jpg)] bg-cover bg-center bg-no-repeat p-6 rounded-lg shadow-sm">
+            <form action="mailto:nutriscanteam@email.com" method="POST" enctype="text/plain"
+                class="space-y-4">
+                <input type="text" name="name" placeholder="Your Name"
+                    class="w-full p-3 border border-gray-300 rounded" required />
+                <input type="email" name="email" placeholder="Your Email"
+                    class="w-full p-3 border border-gray-300 rounded" required />
+                <textarea name="message" rows="4" placeholder="Your Message"
+                    class="w-full p-3 border border-gray-300 rounded" required></textarea>
+                <button type="submit"
+                    class="bg-blue-500 text-white px-6 py-2 rounded-lg font-semibold hover:bg-blue-600">
+                    Send Message
+                </button>
+            </form>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="text-center text-sm text-gray-500 py-8 mt-20">
+        <p>© 2024 NutriScan. All rights reserved.</p>
+    </footer>
+
+    <!-- Upload Script -->
+    <script>
+        const uploadButton = document.getElementById("uploadButton");
+        const fileInput = document.getElementById("imageUpload");
+        const loadingIndicator = document.getElementById("loading-indicator");
+
+        uploadButton.addEventListener("click", async () => {
+            if (!fileInput.files.length) {
+                alert("Please select an image file first.");
+                return;
+            }
+
+            const formData = new FormData();
+            formData.append("file", fileInput.files[0]);
+
+            try {
+                loadingIndicator.classList.remove("hidden");
+
+                const response = await fetch("/upload", {
+                    method: "POST",
+                    body: formData,
+                });
+
+                if (response.redirected) {
+                    window.location.href = response.url;
+                } else {
+                    alert("Unexpected response from server.");
+                }
+
+                loadingIndicator.classList.add("hidden");
+            } catch (err) {
+                alert("Upload failed: " + err.message);
+                loadingIndicator.classList.add("hidden");
+            }
+        });
+    </script>
+</body>
+
+</html>
