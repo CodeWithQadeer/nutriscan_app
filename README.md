@@ -38,13 +38,13 @@ This project highlights skills in **Computer Vision, Flask Web Development, and 
 ```
 git clone https://github.com/your-username/fruits-vegetables-detection.git
 cd fruits-vegetables-detection
+```
 2. Install Dependencies
-bash
-Copy code
+```
 pip install -r requirements.txt
-3. Run the Flask App
-bash
-Copy code
+```
+4. Run the Flask App
+```
 python app.py
 The app will start on http://127.0.0.1:5000/
 ```
