@@ -1,6 +1,8 @@
 flask
 torch
+torchvision
 pillow
 numpy
 opencv-python
+pandas
 gunicorn
