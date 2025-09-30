@@ -1,8 +1,14 @@
 flask
+gunicorn
 torch
 torchvision
 pillow
-numpy
 opencv-python
+numpy
+matplotlib
 pandas
-gunicorn
+seaborn
+scipy
+tqdm
+requests
+pyyaml
