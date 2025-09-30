@@ -5,19 +5,26 @@ import io
 import base64
 import re
 import os
+import sys
+
+# ---------------------------
+# Setup YOLOv5 local import
+# ---------------------------
+sys.path.insert(0, './yolov5')  # make sure yolov5 folder is in repo
+from models.common import DetectMultiBackend
+from utils.torch_utils import select_device
+from utils.augmentations import letterbox
+
+import numpy as np
+import cv2
 
 app = Flask(__name__)
 
 # ---------------------------
 # Load YOLOv5 model
 # ---------------------------
-# Ensure weights/best.pt exists in your repo or download dynamically if too large
-model = torch.hub.load(
-    'ultralytics/yolov5',
-    'custom',
-    path='weights/best.pt',
-    force_reload=False
-)
+device = select_device("cpu")
+model = DetectMultiBackend("weights/best.pt", device=device)
 
 # ---------------------------
 # Calorie dictionary
@@ -39,6 +46,28 @@ calorie_dict = {
 detection_result = {}
 
 
+def run_inference(pil_img):
+    """Run YOLOv5 inference on a PIL image"""
+    # Convert PIL → OpenCV
+    img = np.array(pil_img)
+    img = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+    # Preprocess
+    img_resized = letterbox(img, 640, stride=32, auto=True)[0]
+    img_resized = img_resized.transpose((2, 0, 1))[::-1]  # HWC to CHW, BGR→RGB
+    img_resized = np.ascontiguousarray(img_resized)
+
+    im_tensor = torch.from_numpy(img_resized).to(device).float()
+    im_tensor /= 255.0
+    if im_tensor.ndimension() == 3:
+        im_tensor = im_tensor.unsqueeze(0)
+
+    # Inference
+    results = model(im_tensor)
+
+    return results
+
+
 @app.route('/')
 def index():
     """Homepage with upload form"""
@@ -56,7 +85,7 @@ def upload():
     file = request.files['file']
     image = Image.open(file.stream).convert("RGB")
 
-    # Run YOLOv5 inference
+    # Run inference
     results = model(image)
 
     detected_items = []
@@ -70,14 +99,14 @@ def upload():
         })
         total_calories += calorie_dict.get(name, 0)
 
-    # Render boxes on image
+    # Render image with boxes
     image_with_boxes = results.render()[0]
     pil_img = Image.fromarray(image_with_boxes)
     img_byte_arr = io.BytesIO()
     pil_img.save(img_byte_arr, format='JPEG')
     base64_image = base64.b64encode(img_byte_arr.getvalue()).decode('utf-8')
 
-    # Store result for /result route
+    # Store result for /result
     detection_result = {
         'detected_items': detected_items,
         'image': base64_image,
@@ -107,7 +136,6 @@ def detect():
         img_bytes = base64.b64decode(img_data)
         image = Image.open(io.BytesIO(img_bytes)).convert("RGB")
 
-        # Run YOLOv5 inference
         results = model(image)
 
         detected_items = []
@@ -134,6 +162,4 @@ def live_detection():
 # Run the app
 # ---------------------------
 if __name__ == '__main__':
-    # host=0.0.0.0 → allows external access
-    # port=5000   → default Flask port
     app.run(host="0.0.0.0", port=5000, debug=False)
